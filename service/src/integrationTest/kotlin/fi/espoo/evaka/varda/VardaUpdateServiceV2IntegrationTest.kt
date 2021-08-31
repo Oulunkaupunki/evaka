@@ -143,6 +143,20 @@ class VardaUpdateServiceV2IntegrationTest : FullApplicationTest() {
     }
 
     @Test
+    fun `calculateEvakaVsVardaServiceNeedChangesByChild excludes if service need is not yet valid`() {
+        val since = HelsinkiDateTime.now()
+        val option = snDefaultDaycare.copy(updated = since)
+        createServiceNeed(
+            db, since, option,
+            fromDays = HelsinkiDateTime.now().plusMonths(1).toLocalDate(),
+            toDays = HelsinkiDateTime.now().plusMonths(2).toLocalDate()
+        )
+
+        val diffs = calculateEvakaVsVardaServiceNeedChangesByChild(db, since)
+        assertEquals(0, diffs.keys.size)
+    }
+
+    @Test
     fun `calculateEvakaVsVardaServiceNeedChangesByChild finds updated evaka service need`() {
         val since = HelsinkiDateTime.now()
         val option = snDefaultDaycare.copy(updated = since)
@@ -793,7 +807,7 @@ class VardaUpdateServiceV2IntegrationTest : FullApplicationTest() {
     }
 
     private fun createServiceNeed(db: Database.Connection, updated: HelsinkiDateTime, option: ServiceNeedOption, child: PersonData.Detailed = testChild_1, fromDays: LocalDate = HelsinkiDateTime.now().minusDays(100).toLocalDate(), toDays: LocalDate = HelsinkiDateTime.now().toLocalDate(), placementType: PlacementType = PlacementType.DAYCARE, unitId: DaycareId = testDaycare.id): ServiceNeedId {
-        var serviceNeedId = ServiceNeedId(UUID.randomUUID())
+        val serviceNeedId = ServiceNeedId(UUID.randomUUID())
         db.transaction { tx ->
             FixtureBuilder(tx, HelsinkiDateTime.now().toLocalDate())
                 .addChild().usePerson(child).saveAnd {

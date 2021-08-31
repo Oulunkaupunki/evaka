@@ -712,6 +712,7 @@ LEFT JOIN placement ON sn.placement_id = placement.id
 LEFT JOIN daycare ON daycare.id = placement.unit_id
 LEFT JOIN varda_service_need vsn ON vsn.evaka_service_need_id = sn.id
 WHERE sn.updated >= :startingFrom
+AND sn.start_date < current_date
 AND sno.daycare_hours_per_week > 0
 AND placement.type = ANY(:vardaPlacementTypes::placement_type[])
 AND daycare.upload_children_to_varda = true
