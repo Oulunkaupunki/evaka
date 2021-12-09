@@ -12,6 +12,7 @@ import fi.espoo.evaka.assistanceneed.getAssistanceNeedById
 import fi.espoo.evaka.attachment.citizenHasPermissionThroughPedagogicalDocument
 import fi.espoo.evaka.attachment.isOwnAttachment
 import fi.espoo.evaka.attachment.wasUploadedByAnyEmployee
+import fi.espoo.evaka.childimages.hasPermissionForChildImage
 import fi.espoo.evaka.incomestatement.isOwnIncomeStatement
 import fi.espoo.evaka.messaging.hasPermissionForAttachmentThroughMessageContent
 import fi.espoo.evaka.messaging.hasPermissionForAttachmentThroughMessageDraft
@@ -30,6 +31,7 @@ import fi.espoo.evaka.shared.BackupCareId
 import fi.espoo.evaka.shared.BackupPickupId
 import fi.espoo.evaka.shared.ChildDailyNoteId
 import fi.espoo.evaka.shared.ChildId
+import fi.espoo.evaka.shared.ChildImageId
 import fi.espoo.evaka.shared.ChildStickyNoteId
 import fi.espoo.evaka.shared.DaycareId
 import fi.espoo.evaka.shared.DecisionId
@@ -135,6 +137,16 @@ WHERE employee_id = :userId
         """.trimIndent(),
         "csn.id",
         permittedRoleActions::childStickyNoteActions
+    )
+    private val childImage = ActionConfig(
+        """
+SELECT img.id, role
+FROM child_acl_view
+JOIN child_images img ON child_acl_view.child_id = img.child_id
+WHERE employee_id = :userId
+        """.trimIndent(),
+        "img.id",
+        permittedRoleActions::childImageActions
     )
     private val group = ActionConfig(
         """
@@ -320,6 +332,7 @@ WHERE employee_id = :userId
             is Action.BackupCare -> this.backupCare.hasPermission(user, action, id as BackupCareId)
             is Action.ChildDailyNote -> this.childDailyNote.hasPermission(user, action, id as ChildDailyNoteId)
             is Action.ChildStickyNote -> this.childStickyNote.hasPermission(user, action, id as ChildStickyNoteId)
+            is Action.ChildImage -> hasPermissionFor(user, action, id as ChildImageId)
             is Action.GroupPlacement -> this.groupPlacement.hasPermission(user, action, id as GroupPlacementId)
             is Action.Group -> this.group.hasPermission(user, action, id as GroupId)
             is Action.GroupNote -> this.groupNote.hasPermission(user, action, id as GroupNoteId)
@@ -535,6 +548,19 @@ WHERE employee_id = :userId
             AuthenticatedUser.SystemInternalUser -> false
         }
 
+    private fun hasPermissionFor(user: AuthenticatedUser, action: Action.ChildImage, id: ChildImageId): Boolean =
+        when (user) {
+            is AuthenticatedUser.WeakCitizen -> false
+            is AuthenticatedUser.Citizen -> when (action) {
+                Action.ChildImage.DOWNLOAD -> Database(jdbi).connect { db -> db.read { it.hasPermissionForChildImage(user, id) } }
+            }
+            is AuthenticatedUser.MobileDevice,
+            is AuthenticatedUser.Employee -> when (action) {
+                Action.ChildImage.DOWNLOAD -> this.childImage.hasPermission(user, action, id)
+            }
+            AuthenticatedUser.SystemInternalUser -> false
+        }
+
     fun getPermittedBackupCareActions(
         user: AuthenticatedUser,
         ids: Collection<BackupCareId>
@@ -558,7 +584,8 @@ WHERE employee_id = :userId
 
     fun requirePermissionFor(user: AuthenticatedUser, action: Action.Child, id: UUID) {
         when (user) {
-            is AuthenticatedUser.Employee, is AuthenticatedUser.MobileDevice -> {
+            is AuthenticatedUser.Employee,
+            is AuthenticatedUser.MobileDevice -> {
                 when (action) {
                     Action.Child.READ_SENSITIVE_INFO -> requirePinLogin(user)
                     else -> Unit
@@ -572,7 +599,8 @@ WHERE employee_id = :userId
             }
             is AuthenticatedUser.Citizen -> {
                 when (action) {
-                    Action.Child.READ_PLACEMENT, Action.Child.TERMINATE_PLACEMENT -> requireGuardian(user, setOf(id))
+                    Action.Child.READ_PLACEMENT,
+                    Action.Child.TERMINATE_PLACEMENT -> requireGuardian(user, setOf(id))
                     else -> throw Forbidden()
                 }
             }
@@ -940,6 +968,7 @@ WHERE employee_id = :userId
             action,
             mapping
         )
+        else if (user is AuthenticatedUser.Citizen) hasPermissionThroughRoles(user.roles, action, mapping)
         else false
 
     private inline fun <reified A> assertPermissionUsingAllRoles(
