@@ -157,6 +157,9 @@ function internalApiRouter() {
   return router
 }
 
+app.use((req, res, next) =>
+  setTimeout(next, 100 + Math.ceil(Math.random() * 500))
+)
 app.use('/api/internal', internalApiRouter())
 app.use(errorHandler(true))
 

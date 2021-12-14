@@ -84,6 +84,9 @@ function apiRouter() {
   return router
 }
 
+app.use((req, res, next) =>
+  setTimeout(next, 100 + Math.ceil(Math.random() * 500))
+)
 app.use('/api/application', apiRouter())
 app.use(errorHandler(false))
 
