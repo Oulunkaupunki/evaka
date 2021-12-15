@@ -72,6 +72,14 @@ fun Database.Transaction.resetDatabase() {
     execute("INSERT INTO evaka_user (id, type, name) VALUES ('00000000-0000-0000-0000-000000000000', 'SYSTEM', 'eVaka')")
 }
 
+fun Database.Transaction.terminateConnections() = execute(
+    """
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE pid <> pg_backend_pid() AND datname = current_database() AND usename = current_user
+    """.trimIndent()
+)
+
 fun Database.Transaction.ensureDevData() {
     if (createQuery("SELECT count(*) FROM care_area").mapTo<Int>().first() == 0) {
         listOf("espoo-dev-data.sql", "service-need-options.sql", "employees.sql", "preschool-terms.sql", "club-terms.sql").forEach { runDevScript(it) }

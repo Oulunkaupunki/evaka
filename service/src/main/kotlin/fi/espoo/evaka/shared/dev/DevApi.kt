@@ -169,6 +169,10 @@ class DevApi(
         asyncJobRunner.waitUntilNoRunningJobs(timeout = Duration.ofSeconds(20))
 
         db.transaction {
+            it.terminateConnections()
+        }
+
+        db.transaction {
             it.resetDatabase()
 
             // Terms are not inserted by fixtures
