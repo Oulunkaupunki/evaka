@@ -81,6 +81,7 @@ import fi.espoo.evaka.shared.ChildStickyNoteId
 import fi.espoo.evaka.shared.DaycareId
 import fi.espoo.evaka.shared.DecisionId
 import fi.espoo.evaka.shared.EmployeeId
+import fi.espoo.evaka.shared.EvakaUserId
 import fi.espoo.evaka.shared.GroupId
 import fi.espoo.evaka.shared.GroupNoteId
 import fi.espoo.evaka.shared.GroupPlacementId
@@ -109,6 +110,8 @@ import fi.espoo.evaka.shared.domain.HelsinkiDateTime
 import fi.espoo.evaka.shared.domain.NotFound
 import fi.espoo.evaka.shared.security.PilotFeature
 import fi.espoo.evaka.shared.security.upsertEmployeeUser
+import fi.espoo.evaka.user.EvakaUser
+import fi.espoo.evaka.user.EvakaUserType
 import fi.espoo.evaka.vasu.CurriculumType
 import fi.espoo.evaka.vasu.VasuLanguage
 import fi.espoo.evaka.vasu.getDefaultTemplateContent
@@ -420,6 +423,7 @@ class DevApi(
     fun createPerson(db: Database.DeprecatedConnection, @RequestBody body: DevPerson): ResponseEntity<UUID> {
         return db.transaction { tx ->
             val personId = tx.insertTestPerson(body)
+            tx.insertEvakaUser(EvakaUser(id = EvakaUserId(personId), type = EvakaUserType.CITIZEN, name = body.firstName.plus(' ').plus(body.lastName)))
             tx.createPersonMessageAccount(personId)
             val dto = body.copy(id = personId).toPersonDTO()
             if (dto.identity is ExternalIdentifier.SSN) {
