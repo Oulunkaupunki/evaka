@@ -215,7 +215,7 @@ class StaffAclRowEditor {
   }
 }
 
-class GroupsSection {
+export class GroupsSection {
   constructor(private readonly page: Page) {}
 
   readonly #groupCollapsible = (groupId: string, expectIsClosed = true) =>
@@ -227,6 +227,15 @@ class GroupsSection {
       )
       .find('[data-qa="group-name"]')
 
+  readonly #groupCollapsibleState = (groupId: string): Promise<string | null> =>
+    this.page
+      .find(`[data-qa="daycare-group-collapsible-${groupId}"]`)
+      .getAttribute('data-status')
+
+  #missingGroupsTable = this.page.find(
+    'table[data-qa="table-of-missing-groups"]'
+  )
+
   readonly #missingPlacementRow = this.page.find(
     '[data-qa="missing-placement-row"]'
   )
@@ -234,7 +243,9 @@ class GroupsSection {
     '[data-qa="terminated-placement-row"]'
   )
 
-  async assertMissingPlacementRowCount(expectedCount: number) {
+  async assertMissingGroupPlacementRowCount(expectedCount: number) {
+    await this.#missingGroupsTable.waitUntilVisible()
+
     await waitUntilEqual(
       () => this.#missingPlacementRow.locator.count(),
       expectedCount
@@ -257,14 +268,16 @@ class GroupsSection {
   }
 
   async openGroupCollapsible(groupId: string) {
-    await this.assertGroupCollapsibleIsClosed(groupId)
-    await this.#groupCollapsible(groupId).click()
+    if ((await this.#groupCollapsibleState(groupId)) === 'closed')
+      await this.#groupCollapsible(groupId).click()
+
     await this.assertGroupCollapsibleIsOpen(groupId)
   }
 
   async closeGroupCollapsible(groupId: string) {
-    await this.assertGroupCollapsibleIsOpen(groupId)
-    await this.#groupCollapsible(groupId, false).click()
+    if ((await this.#groupCollapsibleState(groupId)) === 'open')
+      await this.#groupCollapsible(groupId, false).click()
+
     await this.assertGroupCollapsibleIsClosed(groupId)
   }
 
