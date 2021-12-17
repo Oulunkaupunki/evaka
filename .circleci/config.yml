@@ -31,3 +31,4 @@ workflows:
   setup-workflow:
     jobs:
       - generate-config
+

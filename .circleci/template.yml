@@ -62,7 +62,7 @@ aliases:
 
 <%- if not is_pull -%>
   - &builder_aws_core_image << pipeline.parameters.registry >>/voltti/builder-aws:<< pipeline.parameters.builder_aws_version >>-core-<< pipeline.parameters.builder_aws_type >>
-  - &builder_aws_docker_image << pipeline.parameters.registry >>/voltti/builder-aws:<< pipeline.parameters.builder_aws_version >>-docker-<< pipeline.parameters.builder_aws_type >>
+  - &builder_aws_docker_image << pipeline.parameters.registry >>/voltti/builder-aws:docker-<< pipeline.parameters.builder_aws_type >>-691649b988f5a24e90e5a05d2d27d02827e4bef5
   - &builder_aws_terraform_image << pipeline.parameters.registry >>/voltti/builder-aws:<< pipeline.parameters.builder_aws_version >>-terraform-<< pipeline.parameters.builder_aws_type >>
 <% else %>
   - &builder_aws_core_image << pipeline.parameters.nodejs_image >>
@@ -429,11 +429,12 @@ commands:
     steps:
       - restore_repo
       - attach_root_workspace
+      - setup_authenticated_remote_docker:
+          docker_layer_caching: false
       - pull_docker_image:
           image: evaka/api-gateway
       - restore_docker_image:
           dir: service
-      - login_docker_hub
       - run:
           name: Start up compose stack
           working_directory: *workspace_compose
@@ -622,7 +623,7 @@ commands:
                 name: Pull docker image
                 working_directory: << pipeline.parameters.workspace_root >>
                 command: |
-                  ecr-login
+                  ./bin/ci-login-registry
 
                   IMAGE="<< pipeline.parameters.registry >>/<< parameters.image >>"
 
@@ -641,7 +642,7 @@ commands:
                         docker pull "$IMAGE" || true # cache
                       else
                         docker pull "$IMAGE"
-                        docker tag "$IMAGE" "< parameters.image >>:latest"
+                        docker tag "$IMAGE" "<< parameters.image >>:latest"
                       fi
                     fi
                   fi
@@ -671,7 +672,7 @@ commands:
             - run:
                 name: Push docker image
                 command: |
-                  ecr-login
+                  ./bin/ci-login-registry
 
                   if test -z "<< parameters.tag >>"; then
                     IMAGE_TAG="${CIRCLE_SHA1}"
@@ -974,17 +975,14 @@ jobs:
           image: evaka/yarn
       - pull_docker_image:
           image: evaka/api-gateway-build
-          tag: master # get for cache
-      - pull_docker_image:
-          image: evaka/api-gateway
-          tag: master # get for cache
+          previous: true
 
       - build_docker_image:
           image: evaka/api-gateway-build
           dir: *workspace_apigw
           push: false
           save: false
-          base_image: "evaka/yarn"
+          base_image: "<< pipeline.parameters.registry >>/evaka/yarn"
           extra_arguments: "--target=builder"
 
       - run:
@@ -995,19 +993,24 @@ jobs:
           name: Test
           working_directory: *workspace_apigw
           command: |
+            BUILD_IMAGE="evaka/api-gateway-build:${CIRCLE_SHA1}"
             docker rm -f "test_apigw_${CIRCLE_SHA1}" || true
             docker run --name "test_apigw_${CIRCLE_SHA1}" -t "$BUILD_IMAGE" yarn test-ci
             trap "docker rm -f test_apigw_${CIRCLE_SHA1}" EXIT
-            docker cp "test_apigw_${CIRCLE_SHA1}":/project/build/test-reports "$(pwd)/build/test-reports"
+            docker cp "test_apigw_${CIRCLE_SHA1}:/project/build/test-reports" "<< pipeline.parameters.workspace_root >>/apigw/test-reports"
       - store_test_results:
-          path: << pipeline.parameters.workspace_root >>/apigw/build/test-reports
+          path: "<< pipeline.parameters.workspace_root >>/apigw/test-reports"
+
+      - pull_docker_image:
+          image: evaka/api-gateway
+          previous: true
 
       - build_docker_image:
           image: evaka/api-gateway
           dir: *workspace_apigw
           push: true
           save: false
-          base_image: "evaka/yarn"
+          base_image: "<< pipeline.parameters.registry >>/evaka/yarn"
 
       - push_docker_image:
           image: evaka/api-gateway-build
@@ -1064,7 +1067,7 @@ jobs:
 
   e2e-test-testcafe:
     executor: e2e_executor
-    parallelism: 8
+    parallelism: 1 # TODO: change back to 8?
     steps:
       - e2e_test:
           test_runner: testcafe
@@ -1072,7 +1075,7 @@ jobs:
 
   e2e-test-playwright:
     executor: e2e_executor
-    parallelism: 4
+    parallelism: 1 # TODO: change back to 4?
     steps:
       - e2e_test:
           test_runner: playwright
@@ -1350,6 +1353,7 @@ workflows:
           <<: *default_contexts
           requires:
             - checkout_repo
+            - check_licenses # TODO: temporary
       - service_build_and_push_image:
           <<: *default_contexts
           requires:
