@@ -13,7 +13,10 @@ const names = [
   'saml-signing-testi.apro.tunnistus.fi.pem',
   'tamperead-internal-staging.pem',
   'tamperead-internal-migration.pem',
-  'tamperead-internal-prod.pem'
+  'tamperead-internal-prod.pem',
+  'ouluad-internal-staging.pem',
+  'ouluad-internal-migration.pem',
+  'ouluad-internal-prod.pem',
 ] as const
 
 export type TrustedCertificates = typeof names[number]
