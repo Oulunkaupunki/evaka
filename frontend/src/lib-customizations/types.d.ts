@@ -75,6 +75,7 @@ export interface CitizenCustomizations {
   routeLinkRootUrl: string
   mapConfig: MapConfig
   featureFlags: FeatureFlags
+  unitProviderTypes: UnitProviderType[]
 }
 
 interface MapConfig {
