@@ -19,7 +19,7 @@ import {
 } from 'lib-components/layout/flex-helpers'
 import { fontWeights, H1, Label, P } from 'lib-components/typography'
 import { Gap } from 'lib-components/white-space'
-import { featureFlags } from 'lib-customizations/citizen'
+import { featureFlags, unitProviderTypes } from 'lib-customizations/citizen'
 import colors from 'lib-customizations/common'
 import { faAngleDown, faAngleUp } from 'lib-icons'
 import { faArrowLeft } from 'lib-icons'
@@ -63,6 +63,18 @@ export default React.memo(function SearchSection({
   const t = useTranslation()
 
   const [showMoreFilters, setShowMoreFilters] = useState<boolean>(false)
+
+  function groupedList<T>(flatList: T[], subListSize: number): T[][] {
+    return flatList.reduce(
+      (groups: T[][], element: T, i: number) => {
+        i % subListSize != 0 || i == 0
+          ? groups[groups.length - 1].push(element)
+          : groups.push([element])
+        return groups
+      },
+      [[]] as T[][]
+    )
+  }
 
   return (
     <Wrapper opaque>
@@ -148,42 +160,33 @@ export default React.memo(function SearchSection({
 
       {showMoreFilters && (
         <>
-          <Gap size="m" />
-
           <FixedSpaceColumn spacing="xs">
+            <Gap size="m" />
             <Label>{t.map.providerType}</Label>
 
-            <FixedSpaceRow spacing="s">
-              {(['MUNICIPAL', 'PURCHASED'] as const).map((type) => (
-                <SelectionChip
-                  key={type}
-                  text={t.map.providerTypes[type]}
-                  selected={providerTypes.includes(type)}
-                  onChange={(selected) => {
-                    const nextValue = providerTypes.filter((t) => t !== type)
-                    if (selected) nextValue.push(type)
-                    setProviderTypes(nextValue)
-                  }}
-                />
-              ))}
-            </FixedSpaceRow>
-
-            <FixedSpaceRow spacing="s">
-              {(
-                ['PRIVATE', 'PRIVATE_SERVICE_VOUCHER'] as ProviderTypeOption[]
-              ).map((type) => (
-                <SelectionChip
-                  key={type}
-                  text={t.map.providerTypes[type]}
-                  selected={providerTypes.includes(type)}
-                  onChange={(selected) => {
-                    const nextValue = providerTypes.filter((t) => t !== type)
-                    if (selected) nextValue.push(type)
-                    setProviderTypes(nextValue)
-                  }}
-                />
-              ))}
-            </FixedSpaceRow>
+            {groupedList(unitProviderTypes as ProviderTypeOption[], 2).map(
+              (types, idx) => {
+                return (
+                  <FixedSpaceRow spacing="s" key={`${types[idx]} + ${idx}`}>
+                    {types.map((type) => (
+                      <SelectionChip
+                        data-qa={`map-filter-provider-${type.toLowerCase()}`}
+                        key={type}
+                        text={t.map.providerTypes[type]}
+                        selected={providerTypes.includes(type)}
+                        onChange={(selected) => {
+                          const nextValue = providerTypes.filter(
+                            (t) => t !== type
+                          )
+                          if (selected) nextValue.push(type)
+                          setProviderTypes(nextValue)
+                        }}
+                      />
+                    ))}
+                  </FixedSpaceRow>
+                )
+              }
+            )}
           </FixedSpaceColumn>
 
           <Gap size="m" />
@@ -202,6 +205,7 @@ export default React.memo(function SearchSection({
       <Gap size="m" />
 
       <InlineButton
+        data-qa="map-filter-show-more"
         onClick={() => setShowMoreFilters(!showMoreFilters)}
         text={showMoreFilters ? t.map.showLessFilters : t.map.showMoreFilters}
         icon={showMoreFilters ? faAngleUp : faAngleDown}
