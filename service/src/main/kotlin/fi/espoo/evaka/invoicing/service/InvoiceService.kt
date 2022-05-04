@@ -49,7 +49,8 @@ class InvoiceService(
             throw BadRequest("Some invoices were not drafts")
         }
 
-        val maxInvoiceNumber = tx.getMaxInvoiceNumber().let { if (it >= 5000000000) it + 1 else 5000000000 }
+        // TODO: Changed from 5000000000 to 1 for Oulu, Remove once the value is configurable in core
+        val maxInvoiceNumber = tx.getMaxInvoiceNumber().let { if (it >= 1) it + 1 else 1 }
         val updatedInvoices = invoices.mapIndexed { index, invoice ->
             invoice.copy(
                 number = maxInvoiceNumber + index,
