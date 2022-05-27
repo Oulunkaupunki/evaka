@@ -16,7 +16,7 @@ const names = [
   'tamperead-internal-prod.pem',
   'ouluad-internal-staging.pem',
   'ouluad-internal-migration.pem',
-  'ouluad-internal-prod.pem',
+  'ouluad-internal-prod.pem'
 ] as const
 
 export type TrustedCertificates = typeof names[number]
