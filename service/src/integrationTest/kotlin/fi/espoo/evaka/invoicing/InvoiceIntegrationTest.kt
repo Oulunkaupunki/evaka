@@ -552,7 +552,7 @@ class InvoiceIntegrationTest : FullApplicationTest(resetDbBeforeEach = true) {
         assertThat(sentInvoices.all { it.status == InvoiceStatus.SENT }).isTrue
 
         val maxInvoiceNumber = db.transaction { tx -> tx.getMaxInvoiceNumber() }
-        assertEquals(4999999999L + drafts.size, maxInvoiceNumber)
+        assertEquals(0L + drafts.size, maxInvoiceNumber)
     }
 
     @Test
