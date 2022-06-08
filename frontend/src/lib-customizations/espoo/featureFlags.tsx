@@ -31,7 +31,7 @@ const features: Features = {
       personalDetailsPage: true,
       mobileMessages: true,
       leops: true,
-      citizenVasu: true
+      citizenVasu: false
     }
   },
   staging: {
@@ -52,7 +52,7 @@ const features: Features = {
       personalDetailsPage: true,
       mobileMessages: true,
       leops: true,
-      citizenVasu: true
+      citizenVasu: false
     }
   },
   prod: {
