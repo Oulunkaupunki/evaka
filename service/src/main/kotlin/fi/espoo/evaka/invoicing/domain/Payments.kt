@@ -5,6 +5,7 @@
 package fi.espoo.evaka.invoicing.domain
 
 import com.fasterxml.jackson.databind.json.JsonMapper
+import fi.espoo.evaka.daycare.CareType
 import fi.espoo.evaka.invoicing.data.deletePaymentDraftsByDateRange
 import fi.espoo.evaka.invoicing.data.insertPaymentDrafts
 import fi.espoo.evaka.reports.REPORT_STATEMENT_TIMEOUT
@@ -89,6 +90,7 @@ data class PaymentUnit(
     val businessId: String?,
     val iban: String?,
     val providerId: String?,
+    val careType: Set<CareType>
 )
 
 data class Payment(
