@@ -9,6 +9,7 @@ import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuel.core.Headers
 import fi.espoo.evaka.VardaEnv
 import fi.espoo.evaka.shared.utils.responseStringWithRetries
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -22,6 +23,8 @@ interface VardaTokenProvider {
      */
     fun <T> withToken(action: (token: String, refresh: () -> String) -> T): T
 }
+
+private val logger = KotlinLogging.logger {  }
 
 /**
  * Provide a temporary token fetched with basic authentication credentials from the Varda API.
@@ -57,16 +60,21 @@ class VardaTempTokenProvider(
             }
         }
 
-    private fun fetchToken(): VardaApiToken = fuel.get(apiTokenUrl)
-        .header(Headers.AUTHORIZATION, basicAuth)
-        .header(Headers.ACCEPT, "application/json")
-        .header(Headers.CONTENT_TYPE, "application/json")
-        .responseStringWithRetries(3, 300L)
-        .third
-        .fold(
-            { d -> VardaApiToken.from(jsonMapper.readTree(d).get("token").asText()) },
-            { err -> throw IllegalStateException("Requesting Varda API token failed: ${String(err.errorData)}. Aborting update") }
-        )
+    private fun fetchToken(): VardaApiToken {
+        logger.warn { "basicAuth: $basicAuth" }
+        return fuel.get(apiTokenUrl)
+            .header(Headers.AUTHORIZATION, basicAuth)
+            .header(Headers.ACCEPT, "application/json")
+            .header(Headers.CONTENT_TYPE, "application/json")
+            .responseStringWithRetries(3, 300L)
+            .third
+            .fold(
+                { d -> VardaApiToken.from(jsonMapper.readTree(d).get("token").asText()) },
+                { err -> throw IllegalStateException("Requesting Varda API token failed: ${String(err.errorData)}. Aborting update") }
+            )
+    }
+
+
 }
 
 private data class VardaApiToken(
