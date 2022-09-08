@@ -31,7 +31,7 @@ interface Props {
 export default function AbsenceSelector({
   selectedAbsenceType,
   setSelectedAbsenceType,
-  noUnknownAbsences = false
+  noUnknownAbsences = true
 }: Props) {
   const { i18n } = useTranslation()
 
