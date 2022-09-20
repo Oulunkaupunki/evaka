@@ -108,14 +108,13 @@ enum class IncomeCoefficient {
     }
 
     // values are taken from Effica
-    fun multiplier(): BigDecimal =
-        when (this) {
-            MONTHLY_WITH_HOLIDAY_BONUS -> BigDecimal("1.0417") // = 12.5 / 12
-            MONTHLY_NO_HOLIDAY_BONUS -> BigDecimal("1.0000") // = 12 / 12
-            BI_WEEKLY_WITH_HOLIDAY_BONUS -> BigDecimal("2.2323") // = ???
-            BI_WEEKLY_NO_HOLIDAY_BONUS -> BigDecimal("2.1429") // = ???
-            DAILY_ALLOWANCE_21_5 -> BigDecimal("21.5")
-            DAILY_ALLOWANCE_25 -> BigDecimal("25")
-            YEARLY -> BigDecimal("0.0833") // 1 / 12
-        }
+    fun multiplier(): BigDecimal = when (this) {
+        MONTHLY_WITH_HOLIDAY_BONUS -> BigDecimal("1.05") // = 12.5 / 12
+        MONTHLY_NO_HOLIDAY_BONUS -> BigDecimal("1.0000") // = 12 / 12
+        BI_WEEKLY_WITH_HOLIDAY_BONUS -> BigDecimal("2.23125") // = ???
+        BI_WEEKLY_NO_HOLIDAY_BONUS -> BigDecimal("2.125") // = ???
+        DAILY_ALLOWANCE_21_5 -> BigDecimal("21.5")
+        DAILY_ALLOWANCE_25 -> BigDecimal("25")
+        YEARLY -> BigDecimal("0.0833") // 1 / 12
+    }
 }
