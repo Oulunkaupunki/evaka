@@ -83,7 +83,7 @@ export const coefficientMultipliers: Record<IncomeCoefficient, number> = {
   BI_WEEKLY_NO_HOLIDAY_BONUS: 2.125,
   DAILY_ALLOWANCE_21_5: 21.5,
   DAILY_ALLOWANCE_25: 25,
-  YEARLY: 0.0833
+  YEARLY: 0.0833333
 }
 
 const calculateAmounts = (

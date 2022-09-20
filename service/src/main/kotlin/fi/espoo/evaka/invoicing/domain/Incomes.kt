@@ -115,6 +115,6 @@ enum class IncomeCoefficient {
         BI_WEEKLY_NO_HOLIDAY_BONUS -> BigDecimal("2.125") // = ???
         DAILY_ALLOWANCE_21_5 -> BigDecimal("21.5")
         DAILY_ALLOWANCE_25 -> BigDecimal("25")
-        YEARLY -> BigDecimal("0.0833") // 1 / 12
+        YEARLY -> BigDecimal("0.0833333") // 1 / 12
     }
 }
