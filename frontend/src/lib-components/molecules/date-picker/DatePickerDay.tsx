@@ -47,6 +47,8 @@ export default React.memo(function DatePickerDay({
       locale={localeData}
       selected={inputValue?.toSystemTzDate() ?? undefined}
       month={month}
+      // TODO: remove no-unsafe-argument when its not needed
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       onMonthChange={(m) => setMonth(m)}
       disabled={(date: Date) => {
         const localDate = LocalDate.fromSystemTzDate(date)
