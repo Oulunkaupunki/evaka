@@ -236,6 +236,8 @@ export default React.memo(function DatePicker({
 
   const handleDayClick = useCallback(
     (day: Date, modifiers?: DayModifiers) => {
+      // TODO: remove no-unsafe-member-access when its not needed
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (modifiers?.disabled) {
         return
       }
