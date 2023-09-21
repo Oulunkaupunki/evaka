@@ -78,7 +78,6 @@ export default React.memo(function MarkAbsent({ unitId }: { unitId: UUID }) {
                   absenceTypes={[
                     'OTHER_ABSENCE',
                     'SICKLEAVE',
-                    'UNKNOWN_ABSENCE',
                     'PLANNED_ABSENCE'
                   ]}
                   selectedAbsenceType={selectedAbsenceType}
