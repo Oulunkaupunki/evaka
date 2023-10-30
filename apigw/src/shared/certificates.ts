@@ -14,7 +14,6 @@ const names = [
   'idp.test.espoon-voltti.fi.pem',
   'saml-signing.idp.tunnistautuminen.suomi.fi.2022.pem',
   'saml-signing-testi.apro.tunnistus.fi.2022.pem',
-  'ouluad-internal-migration.pem',
   'ouluad-internal-prod.pem'
 ] as const
 
