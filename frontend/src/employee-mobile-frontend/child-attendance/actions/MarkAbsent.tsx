@@ -72,6 +72,7 @@ export default React.memo(function MarkAbsent({
                   absenceTypes={[
                     'OTHER_ABSENCE',
                     'SICKLEAVE',
+                    'UNKNOWN_ABSENCE',
                     'PLANNED_ABSENCE'
                   ]}
                   selectedAbsenceType={selectedAbsenceType}
